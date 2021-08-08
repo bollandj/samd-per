@@ -10,7 +10,8 @@
 void gpio_port_set_input(uint32_t port_mask)
 {
 	for (uint8_t i = 0; i < 32; i++)
-		if (port_mask & 1 << i) PORT->Group[GROUP_PORTA].PINCFG[i].bit.INEN = 1;
+		if (port_mask & 1 << i)
+			PORT->Group[GROUP_PORTA].PINCFG[i].bit.INEN = 1;
 
 	PORT->Group[GROUP_PORTA].DIRCLR.reg = port_mask;
 }
@@ -18,7 +19,8 @@ void gpio_port_set_input(uint32_t port_mask)
 void gpio_port_set_pullup(uint32_t port_mask)
 {
 	for (uint8_t i = 0; i < 32; i++)
-		if (port_mask & 1 << i) PORT->Group[GROUP_PORTA].PINCFG[i].bit.PULLEN = 1;
+		if (port_mask & 1 << i)
+			PORT->Group[GROUP_PORTA].PINCFG[i].bit.PULLEN = 1;
 
 	PORT->Group[GROUP_PORTA].OUTSET.reg = port_mask;
 }
@@ -53,7 +55,8 @@ void gpio_pin_set_pmux(uint8_t pin_no, uint8_t pmux_val)
 	PORT->Group[GROUP_PORTA].PINCFG[pin_no].bit.PMUXEN = 1;
 
 	/* Odd or even */
-	if (pin_no & 1) PORT->Group[GROUP_PORTA].PMUX[pin_no >> 1].bit.PMUXO = pmux_val;
+	if (pin_no & 1)
+		PORT->Group[GROUP_PORTA].PMUX[pin_no >> 1].bit.PMUXO = pmux_val;
 	else
 		PORT->Group[GROUP_PORTA].PMUX[pin_no >> 1].bit.PMUXE = pmux_val;
 }

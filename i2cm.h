@@ -4,14 +4,6 @@
 
 #include "sam.h"
 
-/* Which hardware should be used for this I2CM instance? */
-#define I2CM_SERCOM                     SERCOM2                          // Which SERCOM? (SERCOM0-2)
-#define I2CM_SERCOM_APBCMASK            PM_APBCMASK_SERCOM2              // APB clock enable mask for this SERCOM
-#define I2CM_SERCOM_CLKCTRL_ID_CORE_Val GCLK_CLKCTRL_ID_SERCOM2_CORE_Val // CLKCTRL ID for SERCOM peripheral (0x10 for SERCOM2)
-
-/* I2C Master settings */
-#define I2CM_BAUD 400000UL
-
 /* Bus states */
 #define I2CM_BUSSTATE_UNKNOWN 0
 #define I2CM_BUSSTATE_IDLE    1
