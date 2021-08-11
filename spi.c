@@ -60,10 +60,14 @@ void spi_write(const uint8_t *data, uint32_t len)
 		while (!SPI_SERCOM->SPI.INTFLAG.bit.DRE);
 		SPI_SERCOM->SPI.DATA.reg = data[i];
 	}
+	/* Wait for final byte to be fully sent to facilitate software chip select */
+	while (!SPI_SERCOM->SPI.INTFLAG.bit.TXC);
 }
 
 void spi_write_single(uint8_t data)
 {
 	while (!SPI_SERCOM->SPI.INTFLAG.bit.DRE);
 	SPI_SERCOM->SPI.DATA.reg = data;
+	/* Wait for byte to be fully sent to facilitate software chip select */
+	while (!SPI_SERCOM->SPI.INTFLAG.bit.TXC);
 }
