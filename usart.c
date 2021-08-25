@@ -1,7 +1,6 @@
 
 #include "usart.h"
 #include "gpio.h"
-#include "per_cfg.h"
 
 void usart_init()
 {
@@ -44,17 +43,28 @@ void usart_init()
 									SERCOM_USART_CTRLB_RXEN;
 	while (USART_SERCOM->USART.SYNCBUSY.bit.CTRLB);
 
-	/* Enable RX Complete interrupt */
-	USART_SERCOM->USART.INTENSET.reg = SERCOM_USART_INTENSET_RXC;
-
-	/* Enable interrupt handler */
-	NVIC_SetPriority(SERCOM1_IRQn, 1 << __NVIC_PRIO_BITS);
-	NVIC_EnableIRQ(SERCOM1_IRQn);
-
 	// Enable SERCOM */
 	USART_SERCOM->USART.CTRLA.bit.ENABLE = 1;
 	while (USART_SERCOM->USART.SYNCBUSY.bit.ENABLE);
 }
+
+void usart_enable_interrupts(uint8_t interrupt_mask)
+{
+	/* Wait for sync, then disable SERCOM */
+	while (USART_SERCOM->USART.SYNCBUSY.bit.ENABLE);
+	USART_SERCOM->USART.CTRLA.bit.ENABLE = 0;
+
+	/* Set interrupt mask */
+	USART_SERCOM->USART.INTENSET.reg = interrupt_mask;
+
+	/* Enable interrupt handler */
+	NVIC_SetPriority(USART_SERCOM_IRQn, 1 << __NVIC_PRIO_BITS);
+	NVIC_EnableIRQ(USART_SERCOM_IRQn);
+
+	// Enable SERCOM */
+	USART_SERCOM->USART.CTRLA.bit.ENABLE = 1;
+	while (USART_SERCOM->USART.SYNCBUSY.bit.ENABLE);
+};
 
 void usart_write(const uint8_t *data, uint32_t len)
 {
