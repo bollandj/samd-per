@@ -18,7 +18,7 @@ void dac_init()
 	while (DAC->STATUS.bit.SYNCBUSY);
 	DAC->CTRLA.bit.ENABLE = 0;
 
-	/* Reset the SERCOM */
+	/* Reset DAC */
 	DAC->CTRLA.bit.SWRST = 1;
 	while (DAC->STATUS.bit.SYNCBUSY);
 
