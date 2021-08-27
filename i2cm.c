@@ -27,7 +27,7 @@ void i2cm_init()
 	gpio_pin_set_pmux(I2CM_SDA_PIN, I2CM_SDA_PMUX_Val);
 	gpio_pin_set_pmux(I2CM_SCL_PIN, I2CM_SCL_PMUX_Val);
 
-	/* Configure as master, 100 or 400kHz, SDA = PAD[0], SCK = PAD[1] */
+	/* Configure as master, 100/400kHz, SDA = PAD[0], SCK = PAD[1] */
 	I2CM_SERCOM->I2CM.CTRLA.reg = SERCOM_I2CM_CTRLA_SPEED(0)
 								  | SERCOM_I2CM_CTRLA_SDAHOLD(0)
 								  | SERCOM_I2CM_CTRLA_MODE_I2C_MASTER;

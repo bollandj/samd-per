@@ -4,9 +4,9 @@
 
 #include "sam.h"
 
-#define CLOCK_GCLK_1M  1
-#define CLOCK_GCLK_48M 2
-#define CLOCK_GCLK_96M 3
+#define CLOCK_GCLK_1M_ID  1
+#define CLOCK_GCLK_48M_ID 2
+#define CLOCK_GCLK_96M_ID 3
 
 void clock_1m_init();
 void clock_8m_init();
