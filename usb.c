@@ -5,16 +5,13 @@
 #include "clock.h"
 #include "per_cfg.h"
 
-#include "class/midi/midi_device.h"
-#include "device/usbd.h"
-
 void usb_init()
 {
 	/* Enable the APB clock for USB */
 	PM->APBBMASK.reg |= PM_APBBMASK_USB;
 	PM->AHBMASK.reg |= PM_AHBMASK_USB;
 
-	/* Connect 48MHz clock to USB */
+	/* Connect 48MHz CPU clock to USB */
 	GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN(0) | GCLK_CLKCTRL_ID_USB;
 
 	/* Wait until the clock bus is synchronized */
@@ -32,11 +29,6 @@ void usb_init()
 
 	/* Initialise TinyUSB */
 	tusb_init();
-}
-
-void usb_task()
-{
-	tud_task();
 }
 
 void USB_Handler(void)

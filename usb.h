@@ -3,6 +3,7 @@
 #define USB_H_
 
 void usb_init();
-void usb_task();
+
+inline void usb_task() { tud_task(); }
 
 #endif /* USB_H_ */
