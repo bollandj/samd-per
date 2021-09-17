@@ -1,85 +1,43 @@
 
 #include "clock.h"
 
-void clock_1m_init()
+void clock_osc8m_init()
 {
-	/* Set CLOCK_GCLK_1M_ID clock source to 8MHz internal oscillator, /8 prescaler (1MHz) */
-	GCLK->GENDIV.reg = GCLK_GENDIV_ID(CLOCK_GCLK_1M_ID) | GCLK_GENDIV_DIV(8);
-	GCLK->GENCTRL.reg = GCLK_GENCTRL_ID(CLOCK_GCLK_1M_ID) | GCLK_GENCTRL_SRC_OSC8M | GCLK_GENCTRL_GENEN;
-	while (GCLK->STATUS.bit.SYNCBUSY);
+	/* Enable 8MHz internal oscillator, on demand, disable prescaler */
+	SYSCTRL->OSC8M.reg = SYSCTRL_OSC8M_ENABLE | SYSCTRL_OSC8M_ONDEMAND | SYSCTRL_OSC8M_PRESC(0);
+	while (!SYSCTRL->PCLKSR.bit.OSC8MRDY);
 }
 
-void clock_8m_init()
+void clock_xosc_init()
 {
-	/* Enable 8MHz internal oscillator, disable prescaler */
-	SYSCTRL->OSC8M.bit.ENABLE = 1;
-	SYSCTRL->OSC8M.bit.PRESC = 0;
+	/* Enable 8MHz internal oscillator, on demand, 62.5ms startup time, 2-pin crystal connection */
+	SYSCTRL->XOSC.reg = SYSCTRL_XOSC_ENABLE | SYSCTRL_XOSC_ONDEMAND | SYSCTRL_XOSC_STARTUP(0x0B) | SYSCTRL_XOSC_XTALEN;
 
-	/* Set GCLK0 clock source to 8MHz internal oscillator, disable prescaler */
-	GCLK->GENDIV.reg = GCLK_GENDIV_ID(0) | GCLK_GENDIV_DIV(1);
-	GCLK->GENCTRL.reg = GCLK_GENCTRL_ID(0) | GCLK_GENCTRL_SRC_OSC8M | GCLK_GENCTRL_GENEN;
-	while (GCLK->STATUS.bit.SYNCBUSY);
+	/* Wait for crystal oscillator has settled */
+	while (!SYSCTRL->PCLKSR.bit.XOSCRDY);
 
-	/* Update core frequency (this comes from GCLK0) */
-	SystemCoreClock = 8000000UL;
+	/* Enable automatic amplitude gain control */
+	SYSCTRL->XOSC.bit.AMPGC = 1;
+
+	while (!SYSCTRL->PCLKSR.bit.XOSCRDY);
 }
 
-#if 0
-void clock_48m_init()
+void clock_dfll48m_init(uint8_t gclk_32k_id)
 {
-	/* Direct GCLK0 (8MHz) to the DPLL */
-	GCLK->CLKCTRL.reg = GCLK_CLKCTRL_GEN(0) |
-						GCLK_CLKCTRL_ID(GCLK_CLKCTRL_ID_DFLL48_Val) |
-						GCLK_CLKCTRL_CLKEN;
+	/* Configure the DFLL to generate a 48MHz clock derived from another GCLK */
+	/* The DFLL will operate in closed-loop mode */
+
+	/* Direct 32.768kHz GCLK to be used as the DFLL reference */
+	GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN |
+						GCLK_CLKCTRL_GEN(gclk_32k_id) |
+						GCLK_CLKCTRL_ID(GCLK_CLKCTRL_ID_DFLL48_Val);
 	while (GCLK->STATUS.bit.SYNCBUSY);
-
-	/* Wait for sync before and after enabling DFLL */
-	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
-	SYSCTRL->DFLLCTRL.reg = SYSCTRL_DFLLCTRL_ENABLE;
-	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
-
-	/* Write multiplier and step values */
-	SYSCTRL->DFLLMUL.reg = SYSCTRL_DFLLMUL_MUL(6) | SYSCTRL_DFLLMUL_CSTEP(31) | SYSCTRL_DFLLMUL_FSTEP(511);
-	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
-
-	/* Write the coarse and fine calibration values stored in NVM */
-	uint32_t coarse_cal = *(uint32_t *)FUSES_DFLL48M_COARSE_CAL_ADDR;
-	coarse_cal = (coarse_cal & FUSES_DFLL48M_COARSE_CAL_Msk) >> FUSES_DFLL48M_COARSE_CAL_Pos;
-
-	uint32_t fine_cal = *(uint32_t *)FUSES_DFLL48M_FINE_CAL_ADDR;
-	fine_cal = (fine_cal & FUSES_DFLL48M_FINE_CAL_Msk) >> FUSES_DFLL48M_FINE_CAL_Pos;
-
-	SYSCTRL->DFLLVAL.reg = SYSCTRL_DFLLVAL_COARSE(coarse_cal) | SYSCTRL_DFLLVAL_FINE(fine_cal);
-
-	/* Switch to closed-loop mode, enable waitlock */
-	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
-	SYSCTRL->DFLLCTRL.reg |= (uint16_t)(SYSCTRL_DFLLCTRL_MODE | SYSCTRL_DFLLCTRL_WAITLOCK);
-
-	/* Disable division for GCLK */
-	GCLK->GENDIV.reg = GCLK_GENDIV_ID(CLOCK_GCLK_48M_ID) | GCLK_GENDIV_DIV(1);
-
-	/* Switch GCLK to the DFLL */
-	GCLK->GENCTRL.reg =
-		GCLK_GENCTRL_ID(CLOCK_GCLK_48M_ID) | GCLK_GENCTRL_IDC | GCLK_GENCTRL_GENEN | GCLK_GENCTRL_SRC_DFLL48M;
-	while (GCLK->STATUS.bit.SYNCBUSY);
-}
-#endif
-
-void clock_48m_init()
-{
-	/* Switch CPU to 8Mhz for now by disabling the prescaler */
-	SYSCTRL->OSC8M.reg |= SYSCTRL_OSC8M_ENABLE;
-	SYSCTRL->OSC8M.bit.PRESC = 0;
-
-	/* Configure the DFLL to generate a 48MHz clock. */
-
-	/* Configure the DFLL in open loop mode / USB CRM. */
 
 	/* This is needed as per the errata - accessing the DPLL before doing this can lock the processor. */
-	while (!SYSCTRL->PCLKSR.bit.DFLLRDY) {};
+	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
 
 	SYSCTRL->DFLLCTRL.reg = SYSCTRL_DFLLCTRL_ENABLE;
-	while (!SYSCTRL->PCLKSR.bit.DFLLRDY) {};
+	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
 
 	/* Write the coarse and fine calibration values stored in NVM */
 	uint32_t coarse_cal = *(uint32_t *)FUSES_DFLL48M_COARSE_CAL_ADDR;
@@ -89,7 +47,42 @@ void clock_48m_init()
 	fine_cal = (fine_cal & FUSES_DFLL48M_FINE_CAL_Msk) >> FUSES_DFLL48M_FINE_CAL_Pos;
 
 	SYSCTRL->DFLLVAL.reg = SYSCTRL_DFLLVAL_COARSE(coarse_cal) | SYSCTRL_DFLLVAL_FINE(fine_cal);
-	while (!SYSCTRL->PCLKSR.bit.DFLLRDY) {};
+	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
+
+	/* Disable chill cycle */
+	SYSCTRL->DFLLCTRL.reg = SYSCTRL_DFLLCTRL_CCDIS;
+
+	/* Set multiplier (48M/32.768k = 1465 */
+	SYSCTRL->DFLLMUL.reg = SYSCTRL_DFLLMUL_MUL(1465) | SYSCTRL_DFLLMUL_CSTEP(1) | SYSCTRL_DFLLMUL_FSTEP(0xA);
+
+	/* Closed-loop mode */
+	SYSCTRL->DFLLCTRL.bit.MODE = 1;
+
+	/* Enable the DFLL */
+	SYSCTRL->DFLLCTRL.bit.ENABLE = 1;
+	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
+}
+
+void clock_dfll48m_usb_init()
+{
+	/* Configure the DFLL to generate a 48MHz clock derived from recovered USB clock */
+	/* The DFLL will operate in closed-loop when connected to a USB host and open-loop otherwise */
+
+	/* This is needed as per the errata - accessing the DPLL before doing this can lock the processor. */
+	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
+
+	SYSCTRL->DFLLCTRL.reg = SYSCTRL_DFLLCTRL_ENABLE;
+	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
+
+	/* Write the coarse and fine calibration values stored in NVM */
+	uint32_t coarse_cal = *(uint32_t *)FUSES_DFLL48M_COARSE_CAL_ADDR;
+	coarse_cal = (coarse_cal & FUSES_DFLL48M_COARSE_CAL_Msk) >> FUSES_DFLL48M_COARSE_CAL_Pos;
+
+	uint32_t fine_cal = *(uint32_t *)FUSES_DFLL48M_FINE_CAL_ADDR;
+	fine_cal = (fine_cal & FUSES_DFLL48M_FINE_CAL_Msk) >> FUSES_DFLL48M_FINE_CAL_Pos;
+
+	SYSCTRL->DFLLVAL.reg = SYSCTRL_DFLLVAL_COARSE(coarse_cal) | SYSCTRL_DFLLVAL_FINE(fine_cal);
+	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
 
 	/* Enable USB clock recovery mode. */
 	SYSCTRL->DFLLCTRL.reg = SYSCTRL_DFLLCTRL_USBCRM | SYSCTRL_DFLLCTRL_CCDIS;
@@ -104,51 +97,73 @@ void clock_48m_init()
 	/* Setting to closed loop mode with USBCRM means that
        the DFLL will operate in closed loop when USB is
        connected, but will otherwise operate in open
-       loop mode. */
+       loop mode */
 	SYSCTRL->DFLLCTRL.bit.MODE = 1;
 
-	/* Enable the DFLL. */
+	/* Enable the DFLL */
 	SYSCTRL->DFLLCTRL.bit.ENABLE = 1;
-	while (!SYSCTRL->PCLKSR.bit.DFLLRDY) {};
-
-	/* Before switching the CPU clock, change the number of NVM wait states. */
-	/* 1 wait state required @ 3.3V & 48MHz according to table 37-40 in data sheet. */
-	NVMCTRL->CTRLB.bit.RWS = 1;
-
-	/* Switch GCLK0, and therefore the CPU, to the DFLL. */
-	GCLK->GENCTRL.reg = GCLK_GENCTRL_ID(0) | GCLK_GENCTRL_IDC | GCLK_GENCTRL_GENEN | GCLK_GENCTRL_SRC_DFLL48M;
-
-	/* GENCTRL is Write-Synchronized...so wait for write to complete */
-	while (GCLK->STATUS.bit.SYNCBUSY) {};
-
-	/* CPU clock is now 48 MHz */
-	SystemCoreClock = 48000000;
+	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
 }
 
-void clock_96m_init()
+void clock_fdpll_init(uint8_t gclk_1m_id)
 {
-	/* Enable CLOCK_GCLK_1M_ID and connect it to DPLL GCLK source */
+	/* Direct 1MHZ GCLK to the FDPLL */
 	GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN |
-						GCLK_CLKCTRL_GEN(CLOCK_GCLK_1M_ID) |
+						GCLK_CLKCTRL_GEN(gclk_1m_id) |
 						GCLK_CLKCTRL_ID(GCLK_CLKCTRL_ID_FDPLL_Val);
 	while (GCLK->STATUS.bit.SYNCBUSY);
 
-	/* Set FDPLL ratio to 1 MHz * (95 + 1) = 96 MHz */
+	/* Set FDPLL ratio to 1 MHz * (95 + 1) = 96MHz */
 	SYSCTRL->DPLLRATIO.reg = SYSCTRL_DPLLRATIO_LDR(95) | SYSCTRL_DPLLRATIO_LDRFRAC(0);
 
 	/* Configure FDPLL to disregard phase lock and select GCLK_DPLL as source */
 	SYSCTRL->DPLLCTRLB.reg = SYSCTRL_DPLLCTRLB_LBYPASS |
-							 SYSCTRL_DPLLCTRLB_WUF |
-							 SYSCTRL_DPLLCTRLB_REFCLK(SYSCTRL_DPLLCTRLB_REFCLK_GCLK_Val);
+							SYSCTRL_DPLLCTRLB_WUF |
+							SYSCTRL_DPLLCTRLB_REFCLK(SYSCTRL_DPLLCTRLB_REFCLK_GCLK_Val);
 
 	/* Enable FDPLL */
 	SYSCTRL->DPLLCTRLA.reg |= SYSCTRL_DPLLCTRLA_ENABLE;
+}
 
-	/* No prescaler for CLOCK_GCLK_96M_ID */
-	GCLK->GENDIV.reg = GCLK_GENDIV_ID(CLOCK_GCLK_96M_ID) | GCLK_GENDIV_DIV(1);
-
-	/* Switch CLOCK_GCLK_96M_ID to the FDPLL */
-	GCLK->GENCTRL.reg =
-		GCLK_GENCTRL_ID(CLOCK_GCLK_96M_ID) | GCLK_GENCTRL_IDC | GCLK_GENCTRL_GENEN | GCLK_GENCTRL_SRC_FDPLL;
+void clock_osc8m_connect(uint8_t gclk_id, uint8_t prescaler)
+{
+	GCLK->GENDIV.reg = GCLK_GENDIV_ID(gclk_id) | GCLK_GENDIV_DIV(prescaler);
+	GCLK->GENCTRL.reg = GCLK_GENCTRL_ID(gclk_id) | GCLK_GENCTRL_IDC | GCLK_GENCTRL_GENEN | GCLK_GENCTRL_SRC_OSC8M;
 	while (GCLK->STATUS.bit.SYNCBUSY);
+
+	if (gclk_id == 0) SystemCoreClock = 8000000UL/prescaler;
+}
+
+void clock_xosc_connect(uint8_t gclk_id, uint8_t prescaler, uint32_t xosc_freq)
+{
+	GCLK->GENDIV.reg = GCLK_GENDIV_ID(gclk_id) | GCLK_GENDIV_DIV(prescaler);
+	GCLK->GENCTRL.reg = GCLK_GENCTRL_ID(gclk_id) | GCLK_GENCTRL_IDC | GCLK_GENCTRL_GENEN | GCLK_GENCTRL_SRC_XOSC;
+	while (GCLK->STATUS.bit.SYNCBUSY);
+
+	if (gclk_id == 0) SystemCoreClock = xosc_freq/prescaler;
+}
+
+void clock_dfll48m_connect(uint8_t gclk_id, uint8_t prescaler)
+{
+	if (gclk_id == 0 && prescaler == 1)
+	{
+		/* As we are operating above 24MHz core clock, 1 flash wait state is required at 3.3V */
+		/* (see table 37-42 in SAMD21 datasheet) */
+		NVMCTRL->CTRLB.bit.RWS = 1;
+	}
+
+	GCLK->GENDIV.reg = GCLK_GENDIV_ID(gclk_id) | GCLK_GENDIV_DIV(prescaler);
+	GCLK->GENCTRL.reg = GCLK_GENCTRL_ID(gclk_id) | GCLK_GENCTRL_IDC | GCLK_GENCTRL_GENEN | GCLK_GENCTRL_SRC_DFLL48M;
+	while (GCLK->STATUS.bit.SYNCBUSY);
+
+	if (gclk_id == 0) SystemCoreClock = 48000000UL/prescaler;
+}
+
+void clock_fdpll_connect(uint8_t gclk_id, uint8_t prescaler)
+{
+	GCLK->GENDIV.reg = GCLK_GENDIV_ID(gclk_id) | GCLK_GENDIV_DIV(prescaler);
+	GCLK->GENCTRL.reg = GCLK_GENCTRL_ID(gclk_id) | GCLK_GENCTRL_IDC | GCLK_GENCTRL_GENEN | GCLK_GENCTRL_SRC_FDPLL;
+	while (GCLK->STATUS.bit.SYNCBUSY);
+
+	if (gclk_id == 0) SystemCoreClock = 96000000UL/prescaler; // note max. core clock is 48MHz
 }

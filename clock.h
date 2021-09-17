@@ -4,13 +4,17 @@
 
 #include "sam.h"
 
-#define CLOCK_GCLK_1M_ID  1
-#define CLOCK_GCLK_48M_ID 2
-#define CLOCK_GCLK_96M_ID 3
+/* Clock source initialisation */
+void clock_osc8m_init(); // Initialise 8MHz internal oscillator for CPU clock or general purpose
+void clock_xosc_init(); // Initialise external crystal oscillator
+void clock_dfll48m_init(uint8_t gclk_32k_id); // Initialise 48MHz DFLL using a 32kHz GCLK as source
+void clock_dfll48m_usb_init(); // Initialise 48MHz DFLL using USB clock recovery
+void clock_fdpll_init(uint8_t gclk_1m_id); // Initialise FDPLL at 96MHz using a 1MHz GCLK as source
 
-void clock_1m_init();
-void clock_8m_init();
-void clock_48m_init();
-void clock_96m_init();
+/* Clock source connection to GCLKs */
+void clock_osc8m_connect(uint8_t gclk_id, uint8_t prescaler);
+void clock_xosc_connect(uint8_t gclk_id, uint8_t prescaler, uint32_t xosc_freq);
+void clock_dfll48m_connect(uint8_t gclk_id, uint8_t prescaler);
+void clock_fdpll_connect(uint8_t gclk_id, uint8_t prescaler);
 
 #endif /* CLOCK_H_ */
