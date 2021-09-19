@@ -8,23 +8,38 @@ void clock_osc8m_init()
 	while (!SYSCTRL->PCLKSR.bit.OSC8MRDY);
 }
 
-void clock_xosc_init()
+void clock_xosc_init(uint32_t xosc_freq)
 {
-	/* Enable 8MHz internal oscillator, 62.5ms startup time, 2-pin crystal connection */
-	SYSCTRL->XOSC.reg = SYSCTRL_XOSC_ENABLE | SYSCTRL_XOSC_STARTUP(0x0B) | SYSCTRL_XOSC_XTALEN;
+	/* Determine minimum required gain setting for crystal oscillator frequency */
+	uint8_t xosc_gain=4;
+
+	if      (xosc_freq < 400000)   xosc_gain = 0; // TODO: below min. allowed xtal freq. - assert
+	else if (xosc_freq < 2000000)  xosc_gain = 0;
+	else if (xosc_freq < 4000000)  xosc_gain = 1;
+	else if (xosc_freq < 8000000)  xosc_gain = 2;
+	else if (xosc_freq < 16000000) xosc_gain = 3;
+	else if (xosc_freq < 30000000) xosc_gain = 4;
+	else                           xosc_gain = 4; // TODO: above max. allowed xtal freq. - assert
+
+	/* Enable 8MHz internal oscillator, gain for max. 16MHz, 125ms startup time, 2-pin crystal connection */
+	SYSCTRL->XOSC.reg = SYSCTRL_XOSC_ENABLE |
+						SYSCTRL_XOSC_GAIN(xosc_gain) |
+						SYSCTRL_XOSC_STARTUP(0x0C) |
+						SYSCTRL_XOSC_XTALEN;
 
 	/* Wait until crystal oscillator has settled */
 	while (!SYSCTRL->PCLKSR.bit.XOSCRDY);
 
-	/* Enable automatic amplitude gain control */
+	/* Now enable automatic amplitude gain control */
 	SYSCTRL->XOSC.bit.AMPGC = 1;
 
 	while (!SYSCTRL->PCLKSR.bit.XOSCRDY);
 }
 
+/* Warning: untested! */
 void clock_dfll48m_init(uint8_t gclk_32k_id)
 {
-	/* Configure the DFLL to generate a 48MHz clock derived from another GCLK */
+	/* Configure the DFLL to generate a 48MHz clock derived from an external 32.768kHz osc. */
 	/* The DFLL will operate in closed-loop mode */
 
 	/* Direct 32.768kHz GCLK to be used as the DFLL reference */
@@ -33,7 +48,7 @@ void clock_dfll48m_init(uint8_t gclk_32k_id)
 						GCLK_CLKCTRL_ID(GCLK_CLKCTRL_ID_DFLL48_Val);
 	while (GCLK->STATUS.bit.SYNCBUSY);
 
-	/* See SAMD21 errata item 1.2.1 */
+	/* See SAMD21 errata item 1.2.1 - peripheral must be requested (ONDEMAND = 0) before configuration */
 	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
 	SYSCTRL->DFLLCTRL.reg = SYSCTRL_DFLLCTRL_ENABLE;
 	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
@@ -48,17 +63,16 @@ void clock_dfll48m_init(uint8_t gclk_32k_id)
 	SYSCTRL->DFLLVAL.reg = SYSCTRL_DFLLVAL_COARSE(coarse_cal) | SYSCTRL_DFLLVAL_FINE(fine_cal);
 	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
 
-	/* Disable chill cycle */
-	SYSCTRL->DFLLCTRL.reg = SYSCTRL_DFLLCTRL_CCDIS;
-
-	/* Set multiplier (48M/32.768k = 1465 */
+	/* Set multiplier (48M/32.768k = 1465) */
 	SYSCTRL->DFLLMUL.reg = SYSCTRL_DFLLMUL_MUL(1465) | SYSCTRL_DFLLMUL_CSTEP(31) | SYSCTRL_DFLLMUL_FSTEP(511);
 
-	/* Closed-loop mode */
-	SYSCTRL->DFLLCTRL.bit.MODE = 1;
+	/* Closed loop mode, wait for lock, enable */
+	SYSCTRL->DFLLCTRL.reg |= SYSCTRL_DFLLCTRL_MODE |
+							SYSCTRL_DFLLCTRL_WAITLOCK |
+							SYSCTRL_DFLLCTRL_ENABLE;
 
-	/* Enable the DFLL */
-	SYSCTRL->DFLLCTRL.bit.ENABLE = 1;
+	/* Wait for lock */
+	while (!SYSCTRL->PCLKSR.bit.DFLLLCKC || !SYSCTRL->PCLKSR.bit.DFLLLCKF);
 	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
 }
 
@@ -67,9 +81,8 @@ void clock_dfll48m_usb_init()
 	/* Configure the DFLL to generate a 48MHz clock derived from recovered USB clock */
 	/* The DFLL will operate in closed-loop when connected to a USB host and open-loop otherwise */
 
-	/* This is needed as per the errata - accessing the DPLL before doing this can lock the processor. */
+	/* See SAMD21 errata item 1.2.1 - peripheral must be requested (ONDEMAND = 0) before configuration */
 	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
-
 	SYSCTRL->DFLLCTRL.reg = SYSCTRL_DFLLCTRL_ENABLE;
 	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
 
@@ -104,16 +117,18 @@ void clock_dfll48m_usb_init()
 	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
 }
 
-void clock_fdpll_init(uint8_t gclk_1m_id)
+void clock_fdpll_init(uint8_t gclk_1m_id, uint16_t ratio)
 {
+	/* TODO: assert that resulting frequency is between 48-96MHz */
+
 	/* Direct 1MHZ GCLK to the FDPLL */
 	GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN |
 						GCLK_CLKCTRL_GEN(gclk_1m_id) |
 						GCLK_CLKCTRL_ID(GCLK_CLKCTRL_ID_FDPLL_Val);
 	while (GCLK->STATUS.bit.SYNCBUSY);
 
-	/* Set FDPLL ratio to 1 MHz * (95 + 1) = 96MHz */
-	SYSCTRL->DPLLRATIO.reg = SYSCTRL_DPLLRATIO_LDR(95) | SYSCTRL_DPLLRATIO_LDRFRAC(0);
+	/* Set FDPLL freq to 1MHz * ratio */
+	SYSCTRL->DPLLRATIO.reg = SYSCTRL_DPLLRATIO_LDR(ratio - 1) | SYSCTRL_DPLLRATIO_LDRFRAC(0);
 
 	/* Configure FDPLL to disregard phase lock and select GCLK_DPLL as source */
 	SYSCTRL->DPLLCTRLB.reg = SYSCTRL_DPLLCTRLB_LBYPASS |
@@ -121,7 +136,7 @@ void clock_fdpll_init(uint8_t gclk_1m_id)
 							SYSCTRL_DPLLCTRLB_REFCLK(SYSCTRL_DPLLCTRLB_REFCLK_GCLK_Val);
 
 	/* Enable FDPLL */
-	SYSCTRL->DPLLCTRLA.reg |= SYSCTRL_DPLLCTRLA_ENABLE;
+	SYSCTRL->DPLLCTRLA.bit.ENABLE = 1;
 }
 
 void clock_osc8m_connect(uint8_t gclk_id, uint8_t prescaler)
@@ -144,12 +159,9 @@ void clock_xosc_connect(uint8_t gclk_id, uint8_t prescaler, uint32_t xosc_freq)
 
 void clock_dfll48m_connect(uint8_t gclk_id, uint8_t prescaler)
 {
-	if (gclk_id == 0 && prescaler == 1)
-	{
-		/* As we are operating above 24MHz core clock, 1 flash wait state is required at 3.3V */
-		/* (see table 37-42 in SAMD21 datasheet) */
-		NVMCTRL->CTRLB.bit.RWS = 1;
-	}
+	/* If we are operating above 24MHz core clock, 1 flash wait state is required at 3.3V */
+	/* (see table 37-42 in SAMD21 datasheet) */
+	if (gclk_id == 0 && prescaler == 1) NVMCTRL->CTRLB.bit.RWS = 1;
 
 	GCLK->GENDIV.reg = GCLK_GENDIV_ID(gclk_id) | GCLK_GENDIV_DIV(prescaler);
 	GCLK->GENCTRL.reg = GCLK_GENCTRL_ID(gclk_id) | GCLK_GENCTRL_IDC | GCLK_GENCTRL_GENEN | GCLK_GENCTRL_SRC_DFLL48M;
@@ -158,11 +170,15 @@ void clock_dfll48m_connect(uint8_t gclk_id, uint8_t prescaler)
 	if (gclk_id == 0) SystemCoreClock = 48000000UL/prescaler;
 }
 
-void clock_fdpll_connect(uint8_t gclk_id, uint8_t prescaler)
+void clock_fdpll_connect(uint8_t gclk_id, uint8_t prescaler, uint32_t fdpll_freq)
 {
+	/* If we are operating above 24MHz core clock, 1 flash wait state is required at 3.3V */
+	/* (see table 37-42 in SAMD21 datasheet) */
+	if (gclk_id == 0 && fdpll_freq/prescaler > 24000000UL) NVMCTRL->CTRLB.bit.RWS = 1;
+
 	GCLK->GENDIV.reg = GCLK_GENDIV_ID(gclk_id) | GCLK_GENDIV_DIV(prescaler);
 	GCLK->GENCTRL.reg = GCLK_GENCTRL_ID(gclk_id) | GCLK_GENCTRL_IDC | GCLK_GENCTRL_GENEN | GCLK_GENCTRL_SRC_FDPLL;
 	while (GCLK->STATUS.bit.SYNCBUSY);
 
-	if (gclk_id == 0) SystemCoreClock = 96000000UL/prescaler; // note max. core clock is 48MHz
+	if (gclk_id == 0) SystemCoreClock = fdpll_freq/prescaler; // note max. core clock is 48MHz
 }
