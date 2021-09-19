@@ -3,17 +3,17 @@
 
 void clock_osc8m_init()
 {
-	/* Enable 8MHz internal oscillator, on demand, disable prescaler */
-	SYSCTRL->OSC8M.reg = SYSCTRL_OSC8M_ENABLE | SYSCTRL_OSC8M_ONDEMAND | SYSCTRL_OSC8M_PRESC(0);
+	/* Enable 8MHz internal oscillator, disable prescaler */
+	SYSCTRL->OSC8M.reg = SYSCTRL_OSC8M_ENABLE | SYSCTRL_OSC8M_PRESC(0);
 	while (!SYSCTRL->PCLKSR.bit.OSC8MRDY);
 }
 
 void clock_xosc_init()
 {
-	/* Enable 8MHz internal oscillator, on demand, 62.5ms startup time, 2-pin crystal connection */
-	SYSCTRL->XOSC.reg = SYSCTRL_XOSC_ENABLE | SYSCTRL_XOSC_ONDEMAND | SYSCTRL_XOSC_STARTUP(0x0B) | SYSCTRL_XOSC_XTALEN;
+	/* Enable 8MHz internal oscillator, 62.5ms startup time, 2-pin crystal connection */
+	SYSCTRL->XOSC.reg = SYSCTRL_XOSC_ENABLE | SYSCTRL_XOSC_STARTUP(0x0B) | SYSCTRL_XOSC_XTALEN;
 
-	/* Wait for crystal oscillator has settled */
+	/* Wait until crystal oscillator has settled */
 	while (!SYSCTRL->PCLKSR.bit.XOSCRDY);
 
 	/* Enable automatic amplitude gain control */
@@ -33,9 +33,8 @@ void clock_dfll48m_init(uint8_t gclk_32k_id)
 						GCLK_CLKCTRL_ID(GCLK_CLKCTRL_ID_DFLL48_Val);
 	while (GCLK->STATUS.bit.SYNCBUSY);
 
-	/* This is needed as per the errata - accessing the DPLL before doing this can lock the processor. */
+	/* See SAMD21 errata item 1.2.1 */
 	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
-
 	SYSCTRL->DFLLCTRL.reg = SYSCTRL_DFLLCTRL_ENABLE;
 	while (!SYSCTRL->PCLKSR.bit.DFLLRDY);
 
@@ -53,7 +52,7 @@ void clock_dfll48m_init(uint8_t gclk_32k_id)
 	SYSCTRL->DFLLCTRL.reg = SYSCTRL_DFLLCTRL_CCDIS;
 
 	/* Set multiplier (48M/32.768k = 1465 */
-	SYSCTRL->DFLLMUL.reg = SYSCTRL_DFLLMUL_MUL(1465) | SYSCTRL_DFLLMUL_CSTEP(1) | SYSCTRL_DFLLMUL_FSTEP(0xA);
+	SYSCTRL->DFLLMUL.reg = SYSCTRL_DFLLMUL_MUL(1465) | SYSCTRL_DFLLMUL_CSTEP(31) | SYSCTRL_DFLLMUL_FSTEP(511);
 
 	/* Closed-loop mode */
 	SYSCTRL->DFLLCTRL.bit.MODE = 1;
