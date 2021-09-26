@@ -19,25 +19,25 @@ typedef struct
 	uint32_t clkctrl_id_val;
 } tcc_pwm_hw_t;
 
-#define TCC_PWM_HW_TCC0 							\
-{													\
-	.gclk_val = 0,									\
-	.apbcmask = PM_APBCMASK_TCC0,					\
-	.clkctrl_id_val = GCLK_CLKCTRL_ID_TCC0_TCC1,	\
+#define TCC_PWM_HW_TCC0 						\
+{												\
+	.gclk_val = CLOCK_GCLK0,					\
+	.apbcmask = PM_APBCMASK_TCC0,				\
+	.clkctrl_id_val = GCLK_CLKCTRL_ID_TCC0_TCC1	\
 }
 
-#define TCC_PWM_HW_TCC1 							\
-{													\
-	.gclk_val = 0,									\
-	.apbcmask = PM_APBCMASK_TCC1,					\
-	.clkctrl_id_val = GCLK_CLKCTRL_ID_TCC0_TCC1 	\
+#define TCC_PWM_HW_TCC1 						\
+{												\
+	.gclk_val = CLOCK_GCLK0,					\
+	.apbcmask = PM_APBCMASK_TCC1,				\
+	.clkctrl_id_val = GCLK_CLKCTRL_ID_TCC0_TCC1 \
 }
 
-#define TCC_PWM_HW_TCC2								\
-{													\
-	.gclk_val = 0,									\
-	.apbcmask = PM_APBCMASK_TCC2,					\
-	.clkctrl_id_val = GCLK_CLKCTRL_ID_TCC2_TC3		\
+#define TCC_PWM_HW_TCC2							\
+{												\
+	.gclk_val = CLOCK_GCLK0,					\
+	.apbcmask = PM_APBCMASK_TCC2,				\
+	.clkctrl_id_val = GCLK_CLKCTRL_ID_TCC2_TC3	\
 }
 
 typedef struct
