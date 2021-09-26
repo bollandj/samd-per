@@ -18,6 +18,41 @@ typedef struct
 	.clkctrl_id_val = GCLK_CLKCTRL_ID_SERCOM0_CORE_Val	\
 }
 
+#define USART_HW_SERCOM1 								\
+{														\
+	.gclk_val = CLOCK_GCLK0,							\
+	.apbcmask = PM_APBCMASK_SERCOM1,					\
+	.clkctrl_id_val = GCLK_CLKCTRL_ID_SERCOM1_CORE_Val	\
+}
+
+#define USART_HW_SERCOM2 								\
+{														\
+	.gclk_val = CLOCK_GCLK0,							\
+	.apbcmask = PM_APBCMASK_SERCOM2,					\
+	.clkctrl_id_val = GCLK_CLKCTRL_ID_SERCOM2_CORE_Val	\
+}
+
+#define USART_HW_SERCOM3 								\
+{														\
+	.gclk_val = CLOCK_GCLK0,							\
+	.apbcmask = PM_APBCMASK_SERCOM3,					\
+	.clkctrl_id_val = GCLK_CLKCTRL_ID_SERCOM3_CORE_Val	\
+}
+
+#define USART_HW_SERCOM4 								\
+{														\
+	.gclk_val = CLOCK_GCLK0,							\
+	.apbcmask = PM_APBCMASK_SERCOM4,					\
+	.clkctrl_id_val = GCLK_CLKCTRL_ID_SERCOM4_CORE_Val	\
+}
+
+#define USART_HW_SERCOM5 								\
+{														\
+	.gclk_val = CLOCK_GCLK0,							\
+	.apbcmask = PM_APBCMASK_SERCOM5,					\
+	.clkctrl_id_val = GCLK_CLKCTRL_ID_SERCOM5_CORE_Val	\
+}
+
 typedef struct
 {
 	uint32_t baud;
