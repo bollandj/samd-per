@@ -7,7 +7,6 @@
 
 #include "spi.h"
 #include "gpio.h"
-#include "per_cfg.h"
 
 void spi_init(Sercom *SERCOMX, spi_hw_t *spi_hw, spi_cfg_t *spi_cfg, spi_pinout_t *spi_pinout)
 {

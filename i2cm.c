@@ -1,7 +1,6 @@
 
 #include "i2cm.h"
 #include "gpio.h"
-#include "per_cfg.h"
 
 void i2cm_init()
 {

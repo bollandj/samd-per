@@ -6,7 +6,6 @@
  */
 
 #include "tcc_pwm.h"
-#include "per_cfg.h"
 
 void tcc_pwm_init(Tcc *TCCX, tcc_pwm_hw_t *tcc_pwm_hw, tcc_pwm_cfg_t *tcc_pwm_cfg)
 {
