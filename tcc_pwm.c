@@ -6,14 +6,13 @@
  */
 
 #include "tcc_pwm.h"
-#include "per_cfg.h"
 
 void tcc_pwm_init(Tcc *TCCX, tcc_pwm_hw_t *tcc_pwm_hw, tcc_pwm_cfg_t *tcc_pwm_cfg)
 {
 	/* Enable the APB clock for TCC */
 	PM->APBCMASK.reg |= tcc_pwm_hw->apbcmask;
 
-	/* Clock TCC0 with selected GCLK */
+	/* Clock TCC with selected GCLK */
 	GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID(tcc_pwm_hw->clkctrl_id_val)
 					| GCLK_CLKCTRL_CLKEN
 					| GCLK_CLKCTRL_GEN(tcc_pwm_hw->gclk_val);

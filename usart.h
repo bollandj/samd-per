@@ -3,6 +3,7 @@
 #define USART_H_
 
 #include "sam.h"
+#include "clock.h"
 
 typedef struct
 {

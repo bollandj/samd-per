@@ -10,7 +10,6 @@
 
 #include "sam.h"
 #include "clock.h"
-#include "gpio.h"
 
 typedef struct
 {
@@ -48,7 +47,7 @@ typedef struct
 
 #define TCC_PWM_CFG_DEFAULT 						\
 { 													\
-	.period = 256,          						\
+	.period = 255,          						\
 	.prescaler_val = TCC_CTRLA_PRESCALER_DIV1_Val	\
 }
 

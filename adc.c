@@ -22,13 +22,13 @@ void adc_init(Adc *ADCX, adc_hw_t *adc_hw, adc_cfg_t *adc_cfg)
 	while (ADCX->CTRLA.bit.SWRST || ADCX->STATUS.bit.SYNCBUSY);
 
 	/* Get calibration values from NVM */
-	uint32_t bias = *(uint32_t *) ADC_FUSES_BIASCAL_ADDR;
+	uint32_t bias = *(uint32_t *)ADC_FUSES_BIASCAL_ADDR;
 	bias = (bias & ADC_FUSES_BIASCAL_Msk) >> ADC_FUSES_BIASCAL_Pos;
 
-	uint32_t linearity_0 = *(uint32_t *) ADC_FUSES_LINEARITY_0_ADDR;
+	uint32_t linearity_0 = *(uint32_t *)ADC_FUSES_LINEARITY_0_ADDR;
 	linearity_0 = (linearity_0 & ADC_FUSES_LINEARITY_0_Msk) >> ADC_FUSES_LINEARITY_0_Pos;
 
-	uint32_t linearity_1 = *(uint32_t *) ADC_FUSES_LINEARITY_1_ADDR;
+	uint32_t linearity_1 = *(uint32_t *)ADC_FUSES_LINEARITY_1_ADDR;
 	linearity_1 = (linearity_1 & ADC_FUSES_LINEARITY_1_Msk) >> ADC_FUSES_LINEARITY_1_Pos;
 
 	uint32_t linearity = (linearity_1 << 5) | linearity_0;
@@ -58,7 +58,7 @@ void adc_init(Adc *ADCX, adc_hw_t *adc_hw, adc_cfg_t *adc_cfg)
 	while (ADCX->STATUS.bit.SYNCBUSY);
 }
 
-uint16_t adc_read_single(Adc *ADCX, uint32_t mux_pos_val, uint32_t mux_neg_val)
+uint16_t adc_read_single(Adc *ADCX, uint8_t mux_pos_val, uint8_t mux_neg_val)
 {
 	/* Flush ADC */
 	ADCX->SWTRIG.reg = ADC_SWTRIG_FLUSH;

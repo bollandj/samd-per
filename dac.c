@@ -22,10 +22,12 @@ void dac_init(Dac *DACX, dac_hw_t *dac_hw, dac_cfg_t *dac_cfg)
 	DACX->CTRLA.bit.SWRST = 1;
 	while (DACX->STATUS.bit.SYNCBUSY);
 
-	/* Enable external output */
+	/* Enable external output, select voltage reference */
 	DACX->CTRLB.reg = DAC_CTRLB_EOEN
-					| (dac_cfg->leftadj ? DAC_CTRLB_LEFTADJ : 0)
 					| DAC_CTRLB_REFSEL(dac_cfg->refsel);
+
+	/* Left-adjust input? */
+	DACX->CTRLB.bit.LEFTADJ = dac_cfg->leftadj;
 
 	/* Enable DAC */
 	DACX->CTRLA.bit.ENABLE = 1;

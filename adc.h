@@ -32,6 +32,6 @@ typedef struct
 }
 
 void adc_init(Adc *ADCX, adc_hw_t *adc_hw, adc_cfg_t *adc_cfg);
-uint16_t adc_read_single(Adc *ADCX, uint32_t mux_pos_val, uint32_t mux_neg_val);
+uint16_t adc_read_single(Adc *ADCX, uint8_t mux_pos_val, uint8_t mux_neg_val);
 
 #endif // ADC_H

@@ -5,14 +5,14 @@
 #include "clock.h"
 #include "per_cfg.h"
 
-void usb_init()
+void usb_init(uint8_t gclk_48m_id)
 {
 	/* Enable the APB clock for USB */
 	PM->APBBMASK.reg |= PM_APBBMASK_USB;
 	PM->AHBMASK.reg |= PM_AHBMASK_USB;
 
 	/* Connect 48MHz CPU clock to USB */
-	GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN(0) | GCLK_CLKCTRL_ID_USB;
+	GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN(gclk_48m_id) | GCLK_CLKCTRL_ID_USB;
 
 	/* Wait until the clock bus is synchronized */
 	while (GCLK->STATUS.bit.SYNCBUSY);

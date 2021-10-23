@@ -22,7 +22,7 @@ void systick_init()
 	/* Enable SysTick, tick interrupt, use internal (CPU) clock */
 	SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
 
-	/* Enable interrupt with lowest priority*/
+	/* Enable interrupt with lowest priority */
 	NVIC_SetPriority(SysTick_IRQn, (1 << __NVIC_PRIO_BITS) - 1);
 	NVIC_EnableIRQ(SysTick_IRQn);
 }
