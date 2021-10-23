@@ -1,9 +1,6 @@
 
-#include "sam.h"
-#include "tusb.h"
+#include "usb.h"
 #include "gpio.h"
-#include "clock.h"
-#include "per_cfg.h"
 
 void usb_init(uint8_t gclk_48m_id)
 {

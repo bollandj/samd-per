@@ -6,7 +6,6 @@
  */
 
 #include "systick.h"
-#include "per_cfg.h"
 
 void systick_init()
 {

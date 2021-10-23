@@ -11,6 +11,8 @@
 
 #include "sam.h"
 
+#define SYSTICK_FREQ 1000
+
 void systick_init();
 
 #endif /* SYSTICK_H_ */
