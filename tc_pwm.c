@@ -6,7 +6,7 @@ void tc_pwm_init(Tc *TCX, tc_pwm_hw_t *tc_pwm_hw, tc_pwm_cfg_t *tc_pwm_cfg)
 	/* Enable the APB clock for TC */
 	PM->APBCMASK.reg |= tc_pwm_hw->apbcmask;
 
-	/* Clock TCC0 with selected GCLK */
+	/* Clock TC with selected GCLK */
 	GCLK->CLKCTRL.reg = GCLK_CLKCTRL_ID(tc_pwm_hw->clkctrl_id_val)
 					| GCLK_CLKCTRL_CLKEN
 					| GCLK_CLKCTRL_GEN(tc_pwm_hw->gclk_val);
