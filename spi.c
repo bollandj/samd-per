@@ -8,6 +8,8 @@
 #include "spi.h"
 #include "gpio.h"
 
+static uint32_t _spi_ss_port=PORT_PA00;
+
 void spi_init(Sercom *SERCOMX, spi_hw_t *spi_hw, spi_cfg_t *spi_cfg, spi_pinout_t *spi_pinout)
 {
 	/* Enable APB clock for corresponding SERCOM with Power Manager */
@@ -28,7 +30,7 @@ void spi_init(Sercom *SERCOMX, spi_hw_t *spi_hw, spi_cfg_t *spi_cfg, spi_pinout_
 	SERCOMX->SPI.CTRLA.bit.SWRST = 1;
 	while (SERCOMX->SPI.SYNCBUSY.bit.SWRST || SERCOMX->SPI.SYNCBUSY.bit.ENABLE);
 
-	/* Configure as master */
+	/* Configure as master, set pads for SCK, DI, DO */
 	SERCOMX->SPI.CTRLA.reg = SERCOM_SPI_CTRLA_MODE_SPI_MASTER
 							| SERCOM_SPI_CTRLA_DOPO(spi_pinout->dopo_val)
 							| SERCOM_SPI_CTRLA_DIPO(spi_pinout->dipo_val);
@@ -45,6 +47,11 @@ void spi_init(Sercom *SERCOMX, spi_hw_t *spi_hw, spi_cfg_t *spi_cfg, spi_pinout_
 	//SERCOMX->SPI.CTRLB.bit.MSSEN = 1;
 	//while (SERCOMX->SPI.SYNCBUSY.bit.CTRLB);
 
+	/* SS pin */
+	_spi_ss_port = spi_pinout->ss_port;
+	gpio_port_set_output(_spi_ss_port); // SS
+	gpio_port_set(_spi_ss_port);
+
 	/* Enable SERCOM */
 	SERCOMX->SPI.CTRLA.bit.ENABLE = 1;
 	while (SERCOMX->SPI.SYNCBUSY.bit.ENABLE);
@@ -52,6 +59,8 @@ void spi_init(Sercom *SERCOMX, spi_hw_t *spi_hw, spi_cfg_t *spi_cfg, spi_pinout_
 
 void spi_write(Sercom *SERCOMX, const uint8_t *data, uint32_t len)
 {
+	gpio_port_clear(_spi_ss_port);
+
 	for (uint8_t i = 0; i < len; i++)
 	{
 		while (!SERCOMX->SPI.INTFLAG.bit.DRE);
@@ -59,12 +68,18 @@ void spi_write(Sercom *SERCOMX, const uint8_t *data, uint32_t len)
 	}
 	/* Wait for final byte to be fully sent to facilitate software chip select */
 	while (!SERCOMX->SPI.INTFLAG.bit.TXC);
+
+	gpio_port_set(_spi_ss_port);
 }
 
 void spi_write_single(Sercom *SERCOMX, uint8_t data)
 {
+	gpio_port_clear(_spi_ss_port);
+
 	while (!SERCOMX->SPI.INTFLAG.bit.DRE);
 	SERCOMX->SPI.DATA.reg = data;
 	/* Wait for byte to be fully sent to facilitate software chip select */
 	while (!SERCOMX->SPI.INTFLAG.bit.TXC);
+
+	gpio_port_set(_spi_ss_port);
 }
