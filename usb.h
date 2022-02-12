@@ -11,8 +11,8 @@
 #define USB_DP_PIN      PIN_PA25G_USB_DP
 #define USB_DP_PMUX_Val MUX_PA25G_USB_DP
 
-void usb_init(uint8_t gclk_id);
+extern void (*usb_task)(void);
 
-inline void usb_task() { tud_task(); }
+void usb_init(uint8_t gclk_48m_id, bool (*tusb_init_p)(void), void (*tud_task_p)(void), void (*tud_int_handler_p)(uint8_t));
 
 #endif /* USB_H_ */

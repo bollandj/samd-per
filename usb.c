@@ -2,8 +2,18 @@
 #include "usb.h"
 #include "gpio.h"
 
-void usb_init(uint8_t gclk_48m_id)
+static bool (*_tusb_init)(void);
+static void (*_usb_int_handler)(uint8_t);
+
+void (*usb_task)(void);
+
+void usb_init(uint8_t gclk_48m_id, bool (*tusb_init_p)(void), void (*tud_task_p)(void), void (*tud_int_handler_p)(uint8_t))
 {
+	/* Register TinyUSB functions */
+	_tusb_init = tusb_init_p;
+	_usb_int_handler = tud_int_handler;
+	usb_task = tud_task_p;
+
 	/* Enable the APB clock for USB */
 	PM->APBBMASK.reg |= PM_APBBMASK_USB;
 	PM->AHBMASK.reg |= PM_AHBMASK_USB;
@@ -25,10 +35,10 @@ void usb_init(uint8_t gclk_48m_id)
 	NVIC_SetPriority(USB_IRQn, 1);
 
 	/* Initialise TinyUSB */
-	tusb_init();
+	_tusb_init();
 }
 
 void USB_Handler(void)
 {
-	tud_int_handler(0);
+	_usb_int_handler(0);
 }
