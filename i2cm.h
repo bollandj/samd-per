@@ -94,9 +94,9 @@ typedef struct
 
 void i2cm_init(Sercom *SERCOMX, i2cm_hw_t *i2cm_hw, i2cm_cfg_t *i2cm_cfg);
 
-int8_t i2cm_start(Sercom *SERCOMX, uint8_t address);
-int8_t i2cm_write(Sercom *SERCOMX, const uint8_t *data, uint32_t len);
-int8_t i2cm_write_single(Sercom *SERCOMX, uint8_t data);
+int i2cm_start(Sercom *SERCOMX, uint8_t addr);
+int i2cm_write(Sercom *SERCOMX, const uint8_t *data, unsigned int len);
+int i2cm_write_single(Sercom *SERCOMX, uint8_t data);
 void i2cm_stop(Sercom *SERCOMX);
 
 #endif /* I2CM_H_ */

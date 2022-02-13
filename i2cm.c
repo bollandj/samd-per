@@ -43,13 +43,13 @@ void i2cm_init(Sercom *SERCOMX, i2cm_hw_t *i2cm_hw, i2cm_cfg_t *i2cm_cfg)
 	while (SERCOMX->I2CM.SYNCBUSY.bit.SYSOP);
 }
 
-int8_t i2cm_start(Sercom *SERCOMX, uint8_t address)
+int i2cm_start(Sercom *SERCOMX, uint8_t addr)
 {
 	if (SERCOMX->I2CM.STATUS.bit.BUSSTATE == I2CM_BUSSTATE_BUSY)
 		return -1;
 
 	/* Write address register */
-	SERCOMX->I2CM.ADDR.bit.ADDR = address << 1 | I2CM_WRITE;
+	SERCOMX->I2CM.ADDR.bit.ADDR = addr << 1 | I2CM_WRITE;
 	while (SERCOMX->I2CM.SYNCBUSY.bit.SYSOP);
 
 	/* Wait for Master on Bus interrupt flag */
@@ -62,7 +62,7 @@ int8_t i2cm_start(Sercom *SERCOMX, uint8_t address)
 	return 0;
 }
 
-int8_t i2cm_write(Sercom *SERCOMX, const uint8_t *data, uint32_t len)
+int i2cm_write(Sercom *SERCOMX, const uint8_t *data, unsigned int len)
 {
 	/* Write data */
 	for (uint8_t i = 0; i < len; i++)
@@ -79,7 +79,7 @@ int8_t i2cm_write(Sercom *SERCOMX, const uint8_t *data, uint32_t len)
 	return 0;
 }
 
-int8_t i2cm_write_single(Sercom *SERCOMX, uint8_t data)
+int i2cm_write_single(Sercom *SERCOMX, uint8_t data)
 {
 	/* Write data */
 	SERCOMX->I2CM.DATA.reg = data;
