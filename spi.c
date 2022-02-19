@@ -49,8 +49,8 @@ void spi_init(Sercom *SERCOMX, spi_hw_t *spi_hw, spi_cfg_t *spi_cfg, spi_pinout_
 
 	/* SS pin */
 	_spi_ss_port = spi_pinout->ss_port;
-	gpio_port_set_output(_spi_ss_port); // SS
-	gpio_port_set(_spi_ss_port);
+	gpio_port_set_output(GPIO_GROUP_PORTA, _spi_ss_port); // SS
+	gpio_port_set(GPIO_GROUP_PORTA, _spi_ss_port);
 
 	/* Enable SERCOM */
 	SERCOMX->SPI.CTRLA.bit.ENABLE = 1;
@@ -59,7 +59,7 @@ void spi_init(Sercom *SERCOMX, spi_hw_t *spi_hw, spi_cfg_t *spi_cfg, spi_pinout_
 
 void spi_write(Sercom *SERCOMX, const uint8_t *data, uint32_t len)
 {
-	gpio_port_clear(_spi_ss_port);
+	gpio_port_clear(GPIO_GROUP_PORTA, _spi_ss_port);
 
 	for (uint8_t i = 0; i < len; i++)
 	{
@@ -69,17 +69,17 @@ void spi_write(Sercom *SERCOMX, const uint8_t *data, uint32_t len)
 	/* Wait for final byte to be fully sent to facilitate software chip select */
 	while (!SERCOMX->SPI.INTFLAG.bit.TXC);
 
-	gpio_port_set(_spi_ss_port);
+	gpio_port_set(GPIO_GROUP_PORTA, _spi_ss_port);
 }
 
 void spi_write_single(Sercom *SERCOMX, uint8_t data)
 {
-	gpio_port_clear(_spi_ss_port);
+	gpio_port_clear(GPIO_GROUP_PORTA, _spi_ss_port);
 
 	while (!SERCOMX->SPI.INTFLAG.bit.DRE);
 	SERCOMX->SPI.DATA.reg = data;
 	/* Wait for byte to be fully sent to facilitate software chip select */
 	while (!SERCOMX->SPI.INTFLAG.bit.TXC);
 
-	gpio_port_set(_spi_ss_port);
+	gpio_port_set(GPIO_GROUP_PORTA, _spi_ss_port);
 }

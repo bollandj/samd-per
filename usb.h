@@ -5,9 +5,11 @@
 #include "sam.h"
 #include "tusb.h"
 
+#define USB_DM_GROUP    GPIO_GROUP_PORTA
 #define USB_DM_PIN      PIN_PA24G_USB_DM
 #define USB_DM_PMUX_Val MUX_PA24G_USB_DM
 
+#define USB_DP_GROUP    GPIO_GROUP_PORTA
 #define USB_DP_PIN      PIN_PA25G_USB_DP
 #define USB_DP_PMUX_Val MUX_PA25G_USB_DP
 
