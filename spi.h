@@ -101,7 +101,9 @@ typedef struct
 }
 
 void spi_init(Sercom *SERCOMX, spi_hw_t *spi_hw, spi_cfg_t *spi_cfg, spi_pinout_t *spi_pinout);
+void spi_start(Sercom *SERCOMX);
 void spi_write(Sercom *SERCOMX, const uint8_t *data, uint32_t len);
 void spi_write_single(Sercom *SERCOMX, uint8_t data);
+void spi_stop(Sercom *SERCOMX);
 
 #endif /* SPI_H_ */

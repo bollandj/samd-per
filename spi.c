@@ -57,29 +57,31 @@ void spi_init(Sercom *SERCOMX, spi_hw_t *spi_hw, spi_cfg_t *spi_cfg, spi_pinout_
 	while (SERCOMX->SPI.SYNCBUSY.bit.ENABLE);
 }
 
+void spi_start(Sercom *SERCOMX)
+{
+	gpio_port_clear(GPIO_GROUP_PORTA, _spi_ss_port);	
+}
+
 void spi_write(Sercom *SERCOMX, const uint8_t *data, uint32_t len)
 {
-	gpio_port_clear(GPIO_GROUP_PORTA, _spi_ss_port);
-
 	for (uint8_t i = 0; i < len; i++)
 	{
 		while (!SERCOMX->SPI.INTFLAG.bit.DRE);
 		SERCOMX->SPI.DATA.reg = data[i];
 	}
 	/* Wait for final byte to be fully sent to facilitate software chip select */
-	while (!SERCOMX->SPI.INTFLAG.bit.TXC);
-
-	gpio_port_set(GPIO_GROUP_PORTA, _spi_ss_port);
+	while (!SERCOMX->SPI.INTFLAG.bit.TXC);	
 }
 
 void spi_write_single(Sercom *SERCOMX, uint8_t data)
 {
-	gpio_port_clear(GPIO_GROUP_PORTA, _spi_ss_port);
-
 	while (!SERCOMX->SPI.INTFLAG.bit.DRE);
 	SERCOMX->SPI.DATA.reg = data;
 	/* Wait for byte to be fully sent to facilitate software chip select */
 	while (!SERCOMX->SPI.INTFLAG.bit.TXC);
+}
 
-	gpio_port_set(GPIO_GROUP_PORTA, _spi_ss_port);
+void spi_stop(Sercom *SERCOMX)
+{
+	gpio_port_set(GPIO_GROUP_PORTA, _spi_ss_port);	
 }
