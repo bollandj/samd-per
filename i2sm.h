@@ -11,11 +11,11 @@ typedef struct
 	uint32_t clkctrl_id_val;
 } i2sm_hw_t;
 
-#define I2SM_HW 										\
-{														\
-	.gclk_val = CLOCK_GCLK0,							\
-	.apbcmask = PM_APBCMASK_SERCOM0,					\
-	.clkctrl_id_val = GCLK_CLKCTRL_ID_SERCOM0_CORE_Val	\
+#define I2SM_HW 							\
+{											\
+	.gclk_val = CLOCK_GCLK0,				\
+	.apbcmask = PM_APBCMASK_I2S,			\
+	.clkctrl_id_val = GCLK_CLKCTRL_ID_I2S_0	\
 }
 
 typedef struct
