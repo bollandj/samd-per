@@ -2,7 +2,7 @@
 #include "i2cs.h"
 #include "gpio.h"
 
-void i2cs_init(Sercom *SERCOMX, i2cs_hw_t *i2cs_hw, i2cs_cfg_t *i2cs_cfg, uint8_t i2cs_addr)
+void i2cs_init(Sercom *SERCOMX, i2cs_hw_t *i2cs_hw, uint8_t i2cs_addr)
 {
 	/* Enable APB clock for corresponding SERCOM */
 	PM->APBCMASK.reg |= i2cs_hw->apbcmask;
@@ -22,7 +22,7 @@ void i2cs_init(Sercom *SERCOMX, i2cs_hw_t *i2cs_hw, i2cs_cfg_t *i2cs_cfg, uint8_
 	SERCOMX->I2CS.CTRLA.bit.SWRST = 1;
 	while (SERCOMX->I2CS.SYNCBUSY.bit.SWRST || SERCOMX->I2CS.SYNCBUSY.bit.ENABLE);
 
-	/* Configure as slave, SDA = PAD[0], SCK = PAD[1] */
+	/* Configure as slave, SCLSM = 0, SDA = PAD[0], SCK = PAD[1] */
 	SERCOMX->I2CS.CTRLA.reg = SERCOM_I2CS_CTRLA_MODE_I2C_SLAVE;
 	
 	/* Enable smart operation */
