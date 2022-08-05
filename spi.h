@@ -95,8 +95,7 @@ typedef struct
 #define SPI_PINOUT_DEFAULT					\
 { 											\
 	.dopo_val = SPI_DOPO_DO_PAD0_SCK_PAD1, 	\
-	.dipo_val = SPI_DIPO_DI_PAD2,			\
-	.ss_port  = PORT_PA09               	\
+	.dipo_val = SPI_DIPO_DI_PAD2			\
 }
 
 void spi_init(Sercom *SERCOMX, spi_hw_t *spi_hw, spi_cfg_t *spi_cfg, spi_pinout_t *spi_pinout);
