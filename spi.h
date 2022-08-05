@@ -90,7 +90,6 @@ typedef struct
 {
 	uint8_t dopo_val;
 	uint8_t dipo_val;
-	uint32_t ss_port;
 } spi_pinout_t;
 
 #define SPI_PINOUT_DEFAULT					\
